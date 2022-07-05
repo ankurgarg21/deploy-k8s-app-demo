@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-java-app
+  labels:
+    app: sample-java
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-java
+  template:
+    metadata:
+      labels:
+        app: sample-java
+    spec:
+      containers:
+      - name: sample-java
+        image: ankurgarg21/sample-tomcat
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-java-app-service
+spec:
+  selector:
+    app: sample-java
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: sample-java-app
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            serviceName: sample-java-app-service
+            servicePort: 8080
+            

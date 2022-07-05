@@ -1,0 +1,9 @@
+- hosts: local
+  become: true
+  tasks:
+   - copy:
+       src: share/sample-war.war
+       dest: /opt/tomcat/webapps/
+       owner: tomcat
+       group: tomcat
+       mode: 0644

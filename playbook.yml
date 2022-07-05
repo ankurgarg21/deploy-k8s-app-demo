@@ -1,0 +1,5 @@
+---
+- include: docker-ce.yml
+- include: java.yml
+- include: tomcat.yml
+- include: deploy.yml
