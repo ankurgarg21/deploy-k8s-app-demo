@@ -2,21 +2,57 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sample-java-app
+  name: apache-deployment
   labels:
-    app: sample-java
+    role: webserver
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: sample-java
+      role: webserver
   template:
     metadata:
       labels:
-        app: sample-java
+        role: webserver
     spec:
       containers:
-      - name: sample-java
+      - name: frontend
+        image: httpd
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apache-deployment
+spec:
+  selector:
+    app: webserver
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-java-api1
+  labels:
+    app: sample-java-1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-java-1
+  template:
+    metadata:
+      labels:
+        app: sample-java-1
+    spec:
+      containers:
+      - name: sample-java-1
         image: ankurgarg21/sample-tomcat
         ports:
         - containerPort: 8080
@@ -24,21 +60,55 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sample-java-app-service
+  name: sample-java-1-app-service
 spec:
   selector:
-    app: sample-java
+    app: sample-java-1
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-java-api2
+  labels:
+    app: sample-java-2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-java-2
+  template:
+    metadata:
+      labels:
+        app: sample-java-2
+    spec:
+      containers:
+      - name: sample-java-2
+        image: ankurgarg21/sample-tomcat
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-java-2-app-service
+spec:
+  selector:
+    app: sample-java-1
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8080
+
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: sample-java-app
-  annotations:
-    ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
   - http:
@@ -46,6 +116,16 @@ spec:
         - path: /
           pathType: Prefix
           backend:
-            serviceName: sample-java-app-service
+            serviceName: apache-deployment
+            servicePort: 80
+        - path: /sample-war
+          pathType: Prefix
+          backend:
+            serviceName: sample-java-1-app-service
             servicePort: 8080
+        - path: /sample-war
+          pathType: Prefix
+          backend:
+            serviceName: sample-java-2-app-service
+            servicePort: 8081
             
